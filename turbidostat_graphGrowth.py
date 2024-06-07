@@ -6,7 +6,9 @@ Created on Wed May 29 18:01:23 2024
 @author: johnmallon
 
 This program will read in '.csv' files from the Turbidostat machine and separate data based on
-dilution cycle number and then graph Optical Density vs time
+dilution cycle number and then graph Optical Density vs time. It will also fit exponetials to the growth, extract growth rates 
+in the form of doubling times, and save the data in a '.csv' file. It will also save the graph as a '.svg' file. It plots doubling time
+vs. time, but does not save this plot.
 """
 
 import pandas as pd
@@ -15,7 +17,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 from sklearn.metrics import r2_score
-from IPython.display import display, Math
 
 
 def exponentialEquation(x,y,k,a,c):
