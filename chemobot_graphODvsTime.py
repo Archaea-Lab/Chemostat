@@ -74,6 +74,6 @@ def main():
                         alpha=0.75,ec='k',lw=0.5)
     plt.legend().set_visible(False)
     
-    #figure.savefig('CRISPRi_libraryScreen_liquid_5mMTrp_chemobot_1week_rep2.svg',format='svg',dpi=300)
+    #figure.savefig('figureTitle.svg',format='svg',dpi=300)
 
 main()
