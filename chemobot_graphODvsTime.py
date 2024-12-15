@@ -24,11 +24,17 @@ User must:
 import pandas as pd
 import seaborn
 import matplotlib.pyplot as plt
+from scipy import stats
+
+
+def getSlope(df):
+    slope, intercept, rValue, p_value, std_err = stats.linregress(df['Time (hr)'], df['OD940'])
+    return slope,rValue,
 
 
 def main():
     # Load the .txt file (update the file path and delimiter as needed)
-    txtFilePath = "your_file.txt"
+    txtFilePath = r"C:\Users\User\Desktop\2024_12_14_DS2_saltEvolution_first48Hr_1secondInterval.txt"
     csvFilePath = txtFilePath[:-4]+'.csv'
     delimiter = ","  # Change this to the correct delimiter
 
@@ -51,25 +57,23 @@ def main():
     
     #convert time to hours
     df['Time (hr)'] = (df['unixTime']-df['unixTime'].iloc[0])/60/60
-    
+    #df = df.loc[df['OD940']>= 0.05]
     #get rid of the data where the bot is diluting the vial with media
     cycles = df.groupby('totalCycleCount')
     cyclesData = []
     for cycle,values in cycles:
         growthIndicator = values['growthDurationChange'].iloc[0]
-        print('Cycle: ',cycle)
-        print(growthIndicator)
         subDF = values.loc[values['growthDurationChange']==growthIndicator]
         cyclesData.append(subDF)
     cleanedDF = pd.concat(cyclesData)
     
     #decide how many datapoints to plot (in minutes)
-    timeFrameToPlotInMinutes = 5 
+    timeFrameToPlotInMinutes = 2
     subDF = cleanedDF.iloc[::timeFrameToPlotInMinutes*60]
     subDF.loc[subDF['OD940']>=0]
 
     #plot data
-    figure,ax = plt.subplots(dpi=300)
+    fig1,ax = plt.subplots(dpi=300)
     seaborn.scatterplot(data=subDF,ax=ax,
                         x='Time (hr)', y='OD940',
                         hue='totalCycleCount',
@@ -78,6 +82,37 @@ def main():
     plt.legend().set_visible(False)
     
     #save figure at a '.svg'
-    figure.savefig('figureTitle.svg',format='svg',dpi=300)
+    #fig1.savefig('figureTitle.svg',format='svg',dpi=300)
+
+    cycles = cleanedDF.groupby('totalCycleCount')
+    slopes = []
+    cycleTimes = []
+    for cycle,values in cycles:
+        print('Cycle: ', cycle)
+        subDF = values.loc[values['OD940']>= 0.005]
+        if not subDF.empty:
+            slope,rValue = getSlope(subDF)
+            #print('Slope: ',slope)
+            #print('R^2: ', round(rValue,2))
+            slopes.append(round(slope,4))
+            cycleStart = subDF['Time (hr)'].iloc[0]
+            cycleEnd = subDF['Time (hr)'].iloc[-1]
+            cycleTimes.append(cycleEnd-cycleStart)
+    
+    #plot growth rates
+    fig2,bx = plt.subplots(dpi=300)
+    seaborn.scatterplot(ax=bx,
+                        x=range(len(slopes)),y=slopes)
+    bx.set_xlabel('Cycle #')
+    bx.set_ylabel('Growth Rate (hr^-1)')
+    
+    #plot cycle times
+    fig3,cx = plt.subplots(dpi=300)
+    seaborn.scatterplot(ax=cx,
+                        x=range(len(cycleTimes)),y=cycleTimes)
+    cx.set_xlabel('Cycle #')
+    cx.set_ylabel('Cycle Time (hr)')
+
+        
 
 main()
